@@ -1,4 +1,5 @@
 import sqlalchemy
+from sqlalchemy import orm
 
 from .db_session import SqlAlchemyBase
 
@@ -12,3 +13,6 @@ class Jobs(SqlAlchemyBase):
     collaborators = sqlalchemy.Column(sqlalchemy.Integer)
     is_finished = sqlalchemy.Column(sqlalchemy.BOOLEAN)
     work_size = sqlalchemy.Column(sqlalchemy.Integer)
+    user_id = sqlalchemy.Column(sqlalchemy.Integer,
+                                sqlalchemy.ForeignKey("users.id"))
+    user = orm.relationship('User')

@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h4><i>И на Марсе будут яблони цвести!</i></h4>
-<h1>Adding a job</h1>
+<h1>Добавление новости</h1>
 <form action="" method="post">
     {{ form.hidden_tag() }}
     <p>
@@ -18,7 +17,7 @@
         {{ form.team_leader.label }}<br>
         {{ form.team_leader(class="form-control") }}<br>
         {% for error in form.team_leader.errors %}
-            <p class="alert alert-danger" role="alert">
+            <p content="alert alert-danger" role="alert">
                 {{ error }}
             </p>
         {% endfor %}
@@ -27,7 +26,7 @@
         {{ form.work_size.label }}<br>
         {{ form.work_size(class="form-control") }}<br>
         {% for error in form.work_size.errors %}
-            <p class="alert alert-danger" role="alert">
+            <p content="alert alert-danger" role="alert">
                 {{ error }}
             </p>
         {% endfor %}
@@ -36,12 +35,12 @@
         {{ form.collaborators.label }}<br>
         {{ form.collaborators(class="form-control") }}<br>
         {% for error in form.collaborators.errors %}
-            <p class="alert alert-danger" role="alert">
+            <p content="alert alert-danger" role="alert">
                 {{ error }}
             </p>
         {% endfor %}
     </p>
-    <p>{{ form.is_finished(class="form-check-input", type="checkbox") }} {{ form.is_finished.label }}</p>
+    <p>{{ form.is_finished() }} {{ form.is_finished.label }}</p>
     <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
     {{message}}
 </form>

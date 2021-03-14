@@ -1,5 +1,5 @@
-from flask import Flask, render_template, redirect
-from flask_login import LoginManager, login_user, login_required, logout_user
+from flask import Flask, render_template, redirect, abort, request
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 
 from data import db_session
 from data.jobs import Jobs
@@ -7,6 +7,8 @@ from data.users import User
 from forms.jobform import JobForm
 from forms.loginform import LoginForm
 from forms.registerform import RegisterForm
+from forms.newsform import NewsForm
+from data.news import News
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -76,26 +78,78 @@ def reqister():
     return render_template('register.html', title='Регистрация', form=form)
 
 
-@app.route('/job', methods=['GET', 'POST'])
-def add_job():
+@app.route('/job',  methods=['GET', 'POST'])
+@login_required
+def add_jobs():
     form = JobForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
-        if db_sess.query(Jobs).filter(Jobs.job == form.job.data).first():
-            return render_template('job.html', title='Добавление работы',
-                                   form=form,
-                                   message="Такая работа уже проводилась.")
-        job = Jobs(
-            job=form.job.data,
-            collaborators=form.collaborators.data,
-            is_finished=form.is_finished.data,
-            work_size=form.work_size.data,
-            team_leader=form.team_leader.data
-        )
-        db_sess.add(job)
+        jobs = Jobs()
+        jobs.job = form.job.data
+        jobs.team_leader = form.team_leader.data
+        jobs.collaborators = form.collaborators.data
+        jobs.is_finished = form.is_finished.data
+        jobs.work_size = form.work_size.data
+        current_user.news.append(jobs)
+        db_sess.merge(current_user)
         db_sess.commit()
         return redirect('/')
-    return render_template('job.html', title='Добавление работы', form=form)
+    return render_template('job.html', title='Добавление работ',
+                           form=form)
+
+
+@app.route('/job/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_jobs(id):
+    form = JobForm()
+    if request.method == "GET":
+        db_sess = db_session.create_session()
+        jobs = db_sess.query(Jobs).filter(Jobs.id == id,
+                                          Jobs.user == current_user
+                                          ).first()
+        if jobs:
+            form.job.data = jobs.job
+            form.team_leader.data = jobs.team_leader
+            form.collaborators.data = jobs.collaborators
+            form.is_finished.data = jobs.is_finished
+            form.work_size.data = jobs.work_size
+        else:
+            abort(404)
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        jobs = db_sess.query(Jobs).filter(Jobs.id == id,
+                                          Jobs.user == current_user
+                                          ).first()
+        if jobs:
+            jobs.job = form.job.data
+            jobs.team_leader = form.team_leader.data
+            jobs.collaborators = form.collaborators.data
+            jobs.is_finished = form.is_finished.data
+            jobs.work_size = form.work_size.data
+
+            db_sess.commit()
+            return redirect('/')
+        else:
+            abort(404)
+    return render_template('job.html',
+                           title='Редактирование работы',
+                           form=form
+                           )
+
+
+@app.route('/job_delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def news_delete(id):
+    db_sess = db_session.create_session()
+    news = db_sess.query(Jobs).filter(Jobs.id == id,
+                                      Jobs.user == current_user
+                                      ).first()
+    if news:
+        db_sess.delete(news)
+        db_sess.commit()
+    else:
+        abort(404)
+    return redirect('/')
 
 
 if __name__ == '__main__':
