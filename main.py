@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, abort, request
+from flask import Flask, render_template, redirect, abort, request, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 
 from data import db_session
@@ -7,8 +7,9 @@ from data.users import User
 from forms.jobform import JobForm
 from forms.loginform import LoginForm
 from forms.registerform import RegisterForm
-from forms.newsform import NewsForm
-from data.news import News
+from data import db_session, jobs_api
+from flask import make_response
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -16,6 +17,17 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
 db_session.global_init("db/blogs.db")
+
+
+def main():
+    db_session.global_init("db/blogs.db")
+    app.register_blueprint(jobs_api.blueprint)
+    app.run()
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found'}), 404)
 
 
 @login_manager.user_loader
@@ -153,4 +165,5 @@ def news_delete(id):
 
 
 if __name__ == '__main__':
+    main()
     app.run(port=8080, host='127.0.0.1')
